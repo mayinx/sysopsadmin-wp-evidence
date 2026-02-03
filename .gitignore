@@ -1,0 +1,14 @@
+# Never store secrets
+wp-config.php
+*.pem
+*.key
+*.sql
+*.sql.gz
+
+# WP runtime noise (if copied later)
+wp-content/uploads/
+wp-content/cache/
+
+# OS / editor noise
+.DS_Store
+*.swp
