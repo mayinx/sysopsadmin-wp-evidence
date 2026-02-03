@@ -13,4 +13,5 @@ It does NOT include:
 
 ## What you get
 A WordPress page created from shortcode:
-[sysops_dashboard]
+[sysops_dashboard] 
+(realized as MU-plugin (must use plugin) )
