@@ -12,6 +12,8 @@
  */
 
 // Prevent direct access to this file (security baseline).
+// Ensures the script only runs within WordPress (ABSPATH defined), blocking anyone 
+// from executing the file directly through a browser to exploit vulnerabilities
 if (!defined('ABSPATH')) {
   exit;
 }
@@ -19,19 +21,16 @@ if (!defined('ABSPATH')) {
 /**
  * Shortcode: [sysops_dashboard]
  *
- * Why a shortcode?
- * - You can place it on a normal WordPress page (“SysOps Overview”).
+ * - We can place the shortcode on a normal WordPress page (“SysOps Overview”).
  * - It renders a clean, screenshot-ready dashboard without touching themes.
+ * - MU-Plugins are must use plugins - i.e. even theme changes won't affect them - ideal for a sysops-dashbord-functionality
  */
 add_shortcode('sysops_dashboard', function () {
 
   /**
-   * “Facts” about your deployment.
-   * These are *display-only* values to make the screenshot self-explanatory.
-   *
-   * Note: Hardcoding is OK for an exercise screenshot, but if you ever generalize it:
-   * - derive hostnames from WP settings (home_url())
-   * - derive roots from constants or config files
+   * “Facts” about the deployment (for starters hardcoded).
+   * These are *display-only* values to make the screenshot self-explanatory.  
+   * For now a lot of stuff is still hardcoded for the exercise screenshot - it will evolve later into dynamic info  
    */
   $wp_fqdn       = 'sysopsadmin-wp.cdco-devops.abrdns.com';
   $dash_fqdn     = 'sysopsadmin-dash.cdco-devops.abrdns.com';
@@ -41,8 +40,7 @@ add_shortcode('sysops_dashboard', function () {
 
   /**
    * DB health check (safe + minimal):
-   * - We use a simple SELECT 1 to prove the DB connection works.
-   * - We do NOT run any writes (important since your DB user has “NO DELETE” by requirement).
+   * A simple SELECT 1 shoudl proves that the DB connection works.
    */
   global $wpdb;
   $db_ok  = false;
@@ -62,13 +60,6 @@ add_shortcode('sysops_dashboard', function () {
   } else {
     $db_err = 'WPDB not available';
   }
-
-  /**
-   * Exercise requirement reminder:
-   * - Your DB user MUST NOT have DELETE privilege.
-   * - WordPress may *attempt* DELETE housekeeping queries and show warnings.
-   * - This is expected under the exercise constraint.
-   */
 
   // Build a small “badge” for DB status.
   $db_status_badge = $db_ok
@@ -90,15 +81,15 @@ add_shortcode('sysops_dashboard', function () {
 
   /**
    * Optional quick evidence checks that require no shell commands:
-   * - TLS status: is_ssl() tells you if the current request is HTTPS.
-   * - Backup marker: you can write a timestamp into this file from your backup script.
+   * - TLS status: is_ssl() tells us if the current request is HTTPS.
+   * - Backup marker: we write a timestamp into this file from our backup script.
    */
   $tls_ok = is_ssl(); // true if current page is served via https://
   $tls_badge = $tls_ok
     ? '<span class="sd-badge sd-ok">HTTPS ON</span>'
     : '<span class="sd-badge sd-bad">HTTP ONLY</span>';
 
-  // Backup-marker: create it from your backup script after a successful run.
+  // Backup-marker: created from the backup script after a successful run.
   $backup_marker_dir = '/var/lib/sysopsadmin/public';
   $backup_marker     = $backup_marker_dir . '/last_backup.txt';
   $backup_status = file_exists($backup_marker)
@@ -114,7 +105,7 @@ add_shortcode('sysops_dashboard', function () {
   ob_start();
   ?>
   <style>
-    /* Minimal CSS so the dashboard looks “clean and intentional” in screenshots. */
+    /* Minimal CSS so the dashboard - rough but sufficient */
     .sd-wrap { max-width: 1100px; margin: 0 auto; }
     .sd-hero { margin: 24px 0 14px; padding: 18px; border-radius: 14px; background: #f6f7f9; }
     .sd-hero h2 { margin: 0 0 6px; font-size: 22px; }

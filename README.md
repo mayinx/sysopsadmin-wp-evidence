@@ -80,6 +80,8 @@ sudo /usr/local/bin/sysops-wp-backup.sh
 # Marker line format: 'OK <timestamp> <backup_path>'
 sudo cat /var/lib/sysopsadmin/public/last_backup.txt
 
+
+# Proof 2: List the backup-contents 
 # Extract the backup folder path from the marker line and store it in OUT_DIR.
 # - awk splits the line into whitespace-separated columns
 # - $3 = the 3rd column (= <backup_path>, e.g. '/var/backups/sysopsadmin/20260204T134135Z')
