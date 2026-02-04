@@ -61,6 +61,43 @@ Automated backup script covers:
 - Nginx configs + required logs + Let’s Encrypt files (for exam deliverables)
 Scheduled via cron (`/etc/cron.d/sysops-wp-backup`).
 
+## Backup operations (how to run / verify)
+
+These commands document (a) how to trigger the backup (manually), (b) how to locate the most recent backup artifacts, and (c) how to prove the artifacts are readable without touching production data.
+
+### Run manually
+
+Run the backup once to generate a fresh timestamped folder (files + DB + configs/logs) and update the public marker file for quick evidence (this will update the dashbaord state of the wp-site as well - i.e. the db-tile). 
+
+```bash
+sudo /usr/local/bin/sysops-wp-backup.sh
+sudo cat /var/lib/sysopsadmin/public/last_backup.txt
+OUT_DIR="$(sudo awk '{print $3}' /var/lib/sysopsadmin/public/last_backup.txt)"
+sudo ls -la "$OUT_DIR"
+```
+
+### Sanity “restore proof” (no overwrite)
+
+This is a “restore proof” because it verifies the restore inputs are present and readable:
+(1) both archives can be enumerated (tar can read + integrity looks OK), and
+(2) the DB dump can be decompressed and contains real SQL header/content.
+We don’t extract or import anything here, so production remains unchanged — but we still demonstrate the backup artifacts are usable for a restore.
+
+```bash
+sudo tar -tzf "$OUT_DIR/wp_files.tar.gz" | head
+sudo tar -tzf "$OUT_DIR/configs_and_logs.tar.gz" | head
+sudo gzip -dc "$OUT_DIR/mariadb_wordpress.sql.gz" | head
+```
+
+### Cron schedule evidence (if enabled)
+
+If backups are automated, this provides evidence of the configured schedule and that cron actually executed the job (syslog entries).
+
+```bash
+sudo cat /etc/cron.d/sysops-wp-backup
+sudo grep -E "sysops-wp-backup|CRON" /var/log/syslog | tail -n 80
+```
+
 ## Repo contents (sanitized)
 This repository contains **sanitized** configuration and automation code only:
 - Nginx vHost configs (templates)
@@ -96,11 +133,7 @@ The implementation was done on a Hetzner Cloud VM running Ubuntu 24.04 LTS (“N
 Primary references used to implement and verify the setup (official-first). Additional learning input came from the private DataScientest learning platform (non-public materials; therefore not linkable here).
 
 ### Exercise / Platform learning materials (non-public)
-- DataScientest DevOps Engineer Bootcamp — internal lab + course material (not publicly accessible): Module "Linux Systems Administration DevOps (EN)"
-
-### Exercise / Platform learning materials (non-public)
 - DataScientest DevOps Engineer Bootcamp — internal lab + course material (not publicly accessible), module **“Linux Systems Administration DevOps (EN)”** covering Linux storage, networking, database administration, NGINX, log management, troubleshooting, and backup & recovery.
-
 
 ### WordPress
 - WordPress Requirements — https://wordpress.org/about/requirements/
@@ -135,7 +168,7 @@ Primary references used to implement and verify the setup (official-first). Addi
 - `tar` manpage (Ubuntu) — https://manpages.ubuntu.com/manpages/jammy/en/man1/tar.1.html
 - `find` manpage (Ubuntu) — https://manpages.ubuntu.com/manpages/jammy/en/man1/find.1.html
 
-### Tutorials used as guidance (kept intentionally minimal)
+### Tutorials used as guidance 
 - DigitalOcean: WordPress with LEMP on Ubuntu — https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-lemp-on-ubuntu-22-04
 - DigitalOcean: Let’s Encrypt with Nginx on Ubuntu — https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-22-04
 
