@@ -67,12 +67,30 @@ These commands document (a) how to trigger the backup (manually), (b) how to loc
 
 ### Run manually
 
-Run the backup once to generate a fresh timestamped folder (files + DB + configs/logs) and update the public marker file for quick evidence (this will update the dashbaord state of the wp-site as well - i.e. the db-tile). 
+Run the backup once to generate a fresh timestamped folder (files + DB + configs/logs) and update the public marker file for quick evidence (this updates the WordPress dashboard backup tile/state).
 
 ```bash
+# Trigger backup (creates a new timestamped folder under 
+# /var/backups/sysopsadmin/) and writes/updates the public 
+# marker file (/var/lib/sysopsadmin/public/la
 sudo /usr/local/bin/sysops-wp-backup.sh
+
+# Proof 1: Show the public marker's content (proves that 
+# the script finished + shows the latest backup path).
+# Marker line format: 'OK <timestamp> <backup_path>'
 sudo cat /var/lib/sysopsadmin/public/last_backup.txt
+
+# Extract the backup folder path from the marker line and store it in OUT_DIR.
+# - awk splits the line into whitespace-separated columns
+# - $3 = the 3rd column (= <backup_path>, e.g. '/var/backups/sysopsadmin/20260204T134135Z')
+# This avoids copy/pasting the path manually.
 OUT_DIR="$(sudo awk '{print $3}' /var/lib/sysopsadmin/public/last_backup.txt)"
+
+# List the contents of the latest backup folder 
+# (= proof the artifacts really exist at that path).
+# shoudl conatin configs_and_logs.tar.gz, mariadb_wordpress.sql.gz
+# + wp_files.tar.gz
+# (sudo is necessary because the timestamped backup folders are root-only (mode 700))
 sudo ls -la "$OUT_DIR"
 ```
 
@@ -83,7 +101,10 @@ This is a “restore proof” because it verifies the restore inputs are present
 (2) the DB dump can be decompressed and contains real SQL header/content.
 We don’t extract or import anything here, so production remains unchanged — but we still demonstrate the backup artifacts are usable for a restore.
 
+
 ```bash
+# Doesn't extract anything - just lists file paths + headers 
+# and proves: Everything is there and readable/extractable     
 sudo tar -tzf "$OUT_DIR/wp_files.tar.gz" | head
 sudo tar -tzf "$OUT_DIR/configs_and_logs.tar.gz" | head
 sudo gzip -dc "$OUT_DIR/mariadb_wordpress.sql.gz" | head
@@ -94,7 +115,12 @@ sudo gzip -dc "$OUT_DIR/mariadb_wordpress.sql.gz" | head
 If backups are automated, this provides evidence of the configured schedule and that cron actually executed the job (syslog entries).
 
 ```bash
+# Show cron-Job-Schedule (when, which user, which command/script)
 sudo cat /etc/cron.d/sysops-wp-backup
+
+# Search syslog for cron execution entries and this job name;
+# show the latest matches - i.e. show recent cron/syslog lines
+# mentioning this backup job (evidence it executed).
 sudo grep -E "sysops-wp-backup|CRON" /var/log/syslog | tail -n 80
 ```
 
