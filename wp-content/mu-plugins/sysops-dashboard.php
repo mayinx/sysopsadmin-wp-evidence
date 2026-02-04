@@ -1,5 +1,7 @@
 <?php
 /**
+ * /var/www/sysopsadmin-wp/wp-content/mu-plugins/sysops-dashboard.php
+ * 
  * Plugin Name: SysOps Dashboard (MU)
  * Description: Adds the shortcode [sysops_dashboard] to render SysOps-style tiles in a wordpress-page for the exercise screenshot.
  * Author: C. Daum
@@ -96,11 +98,13 @@ add_shortcode('sysops_dashboard', function () {
     ? '<span class="sd-badge sd-ok">HTTPS ON</span>'
     : '<span class="sd-badge sd-bad">HTTP ONLY</span>';
 
-  // You control this location; create it from your backup script after a successful run.
-  $backup_marker = '/var/backups/sysopsadmin/last_backup.txt';
+  // Backup-marker: create it from your backup script after a successful run.
+  $backup_marker_dir = '/var/lib/sysopsadmin/public';
+  $backup_marker     = $backup_marker_dir . '/last_backup.txt';
   $backup_status = file_exists($backup_marker)
     ? ('Last backup marker: <code>' . esc_html(trim(@file_get_contents($backup_marker))) . '</code>')
-    : ('Backup marker missing: <code>' . esc_html($backup_marker) . '</code>');
+    : ('Backup marker missing: <code>' . esc_html($backup_marker) . '</code><br>' .
+       '<span class="sd-muted">Expected public marker dir: <code>' . esc_html($backup_marker_dir) . '</code></span>');
 
   /**
    * Output buffering:
